@@ -1,0 +1,8 @@
+# Copiar a application-local.yaml (ignorado en Git), o usar variables de entorno.
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/localia}
+    username: ${DATABASE_USERNAME:localia}
+    password: ${DATABASE_PASSWORD}
+localia:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
