@@ -13,6 +13,8 @@ export function TarjetaComercio({ comercio: c }: { comercio: ComercioResumen }) 
       {c.demo && <span className="demo-badge">Ejemplo ficticio</span>}
     </Link>
     <div className="card-content">
+      {c.destacado && <span className="sr-only">Negocio destacado.</span>}
+      {c.demo && <span className="sr-only">Ejemplo ficticio.</span>}
       <span className="eyebrow">{c.categoria.nombre}</span>
       <h3><Link href={rutaComercio(c)}>{c.nombre}<Icono nombre="arrow" size={20}/></Link></h3>
       <p>{c.descripcion ?? "Descubre la información disponible de este negocio."}</p>
