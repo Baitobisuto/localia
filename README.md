@@ -4,6 +4,8 @@ Directorio de negocios locales, inicialmente para El Molar. MVP de lectura: bús
 
 Validación realizada y capturas: [docs/VALIDACION.md](docs/VALIDACION.md).
 
+Arquitectura SEO local, páginas indexables, validación y configuración de Vercel/Search Console: [docs/SEO.md](docs/SEO.md).
+
 ## Arranque local
 
 Requisitos: **Java 21**, Node.js **22.13 o superior** (probado con 24), npm y Docker Desktop con contenedores Linux. Maven viene incluido mediante Wrapper. Comprueba `java -version`: `JAVA_HOME` debe apuntar al JDK 21.
@@ -95,8 +97,9 @@ Se devuelve una lista JSON sin paginación, suficiente para este catálogo inici
 | `PORT` | Puerto del backend | `8080` |
 | `API_URL` | URL privada de la API, incluido `/api` | `http://localhost:8080/api` |
 | `NEXT_PUBLIC_API_URL` | Alternativa pública a `API_URL` | `http://localhost:8080/api` |
-| `SITE_URL` | Origen de canonical y SEO | `http://localhost:3000` |
-| `INDEXABLE` | Habilitar rastreo e indexación | `false` |
+| `NEXT_PUBLIC_SITE_URL` | Origen único de canonical, sitemap, JSON-LD y redes; requiere rebuild al cambiar | Fallback: `https://localia-ten-bice.vercel.app`; ejemplo local: `http://localhost:3000` |
+| `INDEXABLE` | Permitir indexación en producción; previews siempre noindex | Local: `false`; Vercel Production: habilitada salvo `false`; fuera de Vercel: requiere `true` |
+| `GOOGLE_SITE_VERIFICATION` | Contenido del meta tag de verificación de Search Console | Opcional |
 
 `frontend/.env.local` y `backend/src/main/resources/application-local.yaml` están ignorados en Git. Existe `application-local.yaml.example` si prefieres configuración local de Spring. La configuración por variables evita almacenar secretos. El frontend utiliza llamadas en servidor; CORS permite también lecturas directas del origen configurado y rechaza otros orígenes. No habilita credenciales.
 
@@ -155,9 +158,9 @@ npm run build
 npm run start
 ```
 
-El build del frontend no necesita un backend activo; las páginas de catálogo se resuelven en servidor en cada petición. `SITE_URL` debe contener el dominio real antes del build. Activar `INDEXABLE=true` únicamente cuando el directorio real esté revisado. El sitemap excluye demos y usa solo las fichas municipales existentes. Los filtros tienen `noindex`; las fichas demo también. JSON-LD utiliza `LocalBusiness` genérico: una categoría amplia no permite inferir que un negocio sea, por ejemplo, un restaurante o una farmacia. Solo se incluyen datos presentes; no se generan reseñas ni puntuaciones.
+El build del frontend no necesita un backend activo; las páginas de catálogo se resuelven en servidor en cada petición. Configura `NEXT_PUBLIC_SITE_URL` antes del build. En Vercel Production la indexación está habilitada salvo `INDEXABLE=false`; conserva ese bloqueo si el directorio real aún no está revisado. Fuera de Vercel se requiere `NODE_ENV=production` e `INDEXABLE=true`. Las previews siempre tienen noindex. El sitemap excluye demos, fichas insuficientes, búsquedas y categorías sin contenido suficiente. JSON-LD usa `LocalBusiness` genérico solo para establecimientos con dirección y fuente pública; no infiere subtipos por categorías amplias ni añade reseñas o puntuaciones. Consulta [SEO.md](docs/SEO.md) para criterios y migración de dominio.
 
-No se ha publicado ningún servicio. El siguiente paso de despliegue requiere elegir y autorizar un alojamiento.
+Los cambios SEO de esta revisión se han preparado y probado localmente; su publicación y la configuración de cuentas externas quedan pendientes.
 
 ## Añadir un comercio real
 

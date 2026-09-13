@@ -8,10 +8,15 @@ import { Icono } from "@/components/Icono";
 export const dynamic = "force-dynamic";
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-// Impide indexar combinaciones arbitrarias de filtros sin crear páginas SEO vacías.
+// Mantiene el buscador y todas sus combinaciones fuera del índice; las landings concentran la navegación SEO.
 export async function generateMetadata({ searchParams }: Props) {
   const parametros = await searchParams;
-  return crearMetadata("Descubre negocios locales", "Encuentra negocios locales por nombre, categoría y municipio. Consulta sus datos y contacta directamente.", "/comercios", Object.keys(parametros).length === 0);
+  const query = new URLSearchParams();
+  for (const clave of Object.keys(parametros).sort()) {
+    const valor = parametros[clave];
+    for (const entrada of Array.isArray(valor) ? valor : valor === undefined ? [] : [valor]) query.append(clave, entrada);
+  }
+  return crearMetadata("Buscar negocios por nombre, categoría y municipio", "Busca en el directorio de ProxiMolar y combina filtros para encontrar un negocio. Consulta sus datos y contacta directamente.", `/comercios${query.size ? `?${query}` : ""}`, false);
 }
 
 // Lee filtros permitidos y distingue resultados vacíos de una solicitud inválida.
@@ -34,7 +39,7 @@ export default async function Comercios({ searchParams }: Props) {
   if (invalido) return <div className="container section empty-state"><h1>Revisa los filtros</h1><p>La búsqueda admite hasta 120 caracteres. Selecciona las opciones del directorio.</p><Link className="button" href="/comercios">Volver al directorio</Link></div>;
   const [comercios, categorias, municipios] = await Promise.all([buscarComercios(filtros), obtenerCategorias(), obtenerMunicipios()]);
   return <div className="container section directory"><div className="breadcrumb"><Link href="/">Inicio</Link><span>/</span><span>Negocios</span></div>
-    <span className="eyebrow">ENCUENTRA ESO QUE TIENES CERCA</span><h1>Tu próximo descubrimiento.</h1><p className="lead">Comercios, personas y lugares que hacen barrio.</p>
+    <span className="eyebrow">ENCUENTRA ESO QUE TIENES CERCA</span><h1>Buscar negocios locales</h1><p className="lead">Filtra por nombre, categoría y municipio, o explora la <Link href="/el-molar">guía de negocios de El Molar</Link>.</p>
     <form action="/comercios" className="filter-form" role="search">
       <div className="filter-search"><label htmlFor="buscar">Nombre del negocio</label><div className="input-icon"><Icono nombre="search" size={18}/><input id="buscar" name="buscar" defaultValue={filtros.buscar} placeholder="Busca por nombre…" maxLength={120}/></div></div>
       <div><label htmlFor="categoria">Categoría</label><select id="categoria" name="categoria" defaultValue={filtros.categoria ?? ""}><option value="">Todas las categorías</option>{categorias.map(c => <option key={c.id} value={c.slug}>{c.nombre}</option>)}</select></div>
