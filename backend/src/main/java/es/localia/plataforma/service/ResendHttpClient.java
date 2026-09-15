@@ -54,13 +54,17 @@ public class ResendHttpClient implements ResendClient {
                     HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+
+                log.warn(
+                        "operacion=resend_http resultado=fallido status={}",
+                        response.statusCode());
+
                 throw new IllegalStateException(
-                        "Resend respondió con HTTP "
-                                + response.statusCode()
-                                + ": "
-                                + response.body());
+                        "Resend devolvió una respuesta no satisfactoria");
             }
+
         } catch (InterruptedException ex) {
+
             Thread.currentThread().interrupt();
 
             log.warn(
@@ -69,6 +73,10 @@ public class ResendHttpClient implements ResendClient {
             throw new IllegalStateException(
                     "Envío Resend interrumpido",
                     ex);
+
+        } catch (IllegalStateException ex) {
+
+            throw ex;
 
         } catch (Exception ex) {
 
