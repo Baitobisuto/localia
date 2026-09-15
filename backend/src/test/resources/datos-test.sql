@@ -1,3 +1,6 @@
+-- Aísla las fixtures de los comercios incorporados por migraciones; el test revierte esta actualización.
+UPDATE comercio SET activo = FALSE;
+
 INSERT INTO municipio (nombre, slug) VALUES ('Municipio de prueba', 'otro');
 INSERT INTO comercio (municipio_id, categoria_id, nombre, slug, destacado, verificado, fecha_verificacion, demo)
 SELECT m.id, c.id, 'Café de prueba', 'cafe-prueba', TRUE, TRUE, DATE '2026-01-15', TRUE

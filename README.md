@@ -1,6 +1,8 @@
 # Localia
 
-Directorio de negocios locales, inicialmente para El Molar. MVP de lectura: búsqueda, categorías, municipios, destacados y fichas con contactos, horarios, imágenes y fuentes. Sin usuarios, administración ni pagos.
+Directorio de negocios locales, inicialmente para El Molar. Catálogo de lectura: búsqueda, categorías, municipios, destacados y fichas con contactos, horarios, imágenes y fuentes. Solicitudes públicas de alta y publicidad pendientes de revisión. Sin usuarios, administración ni pagos.
+
+Formularios, configuración privada de correo, pruebas y pendientes antes de desplegar: [docs/SOLICITUDES.md](docs/SOLICITUDES.md).
 
 Validación realizada y capturas: [docs/VALIDACION.md](docs/VALIDACION.md).
 
@@ -123,7 +125,7 @@ Filtros combinables en `/api/comercios`: `buscar`, `categoria`, `municipio`, `de
 
 La búsqueda por nombre ignora mayúsculas y trata `%` y `_` como texto literal. Los filtros booleanos admiten `true` y `false`. Texto de búsqueda: hasta 120 caracteres. Slugs: minúsculas ASCII, números y guiones. Los registros inactivos y los de categorías/municipios inactivos no se publican. Un listado vacío devuelve `[]`; una ficha inexistente, 404. Las rutas municipales de listado también admiten `buscar`, `categoria`, `destacado` y `verificado`; la categoría de la ruta tiene precedencia.
 
-Errores: `{ "codigo": "RECURSO_NO_ENCONTRADO", "mensaje": "No se ha encontrado el comercio solicitado" }`. También 400 para parámetros inválidos, 409 para slug ambiguo, 405 para escritura y 500 sin detalles internos. Los logs identifican operación, método, ruta y excepción, sin registrar términos de búsqueda ni contactos.
+Errores: `{ "codigo": "RECURSO_NO_ENCONTRADO", "mensaje": "No se ha encontrado el comercio solicitado" }`. También 400 para parámetros inválidos, 409 para slug ambiguo, 405 para escritura en el catálogo y 500 sin detalles internos. Los logs no registran términos de búsqueda ni contactos. Los únicos endpoints de escritura son `POST /api/solicitudes-comercio` y `POST /api/solicitudes-publicidad`, documentados en la guía de solicitudes.
 
 ## Pruebas y compilación
 

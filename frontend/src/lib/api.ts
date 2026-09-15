@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { Categoria, ComercioDetalle, ComercioResumen, Filtros, Municipio } from "./types";
+import type { TipoSolicitud } from "./solicitudes";
 
 const apiUrl = (process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api").replace(/\/$/, "");
 
@@ -46,3 +47,17 @@ export const obtenerComercioPorSlug = cache((slug: string, municipio?: string) =
   consultarApi<ComercioDetalle>(municipio
     ? `/municipios/${encodeURIComponent(municipio)}/comercios/${encodeURIComponent(slug)}`
     : `/comercios/${encodeURIComponent(slug)}`));
+
+// Envía desde el servidor sin caché ni reintentos que pudieran duplicar solicitudes.
+export async function registrarSolicitud(tipo: TipoSolicitud, datos: Record<string, string | boolean>): Promise<void> {
+  let respuesta: Response;
+  try {
+    respuesta = await fetch(`${apiUrl}/solicitudes-${tipo}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos),
+      cache: "no-store", signal: AbortSignal.timeout(30000),
+    });
+  } catch {
+    throw new ErrorApi(503);
+  }
+  if (!respuesta.ok) throw new ErrorApi(respuesta.status);
+}

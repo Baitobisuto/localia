@@ -17,14 +17,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return <html lang="es"><body>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
     <header className="site-header"><div className="container header-inner">
-      <Link href="/" className="logo" aria-label="ProxiMolar, inicio"><span className="logo-mark"><Icono nombre="store" size={23}/></span>ProxiMolar<span className="logo-dot">.</span></Link>
+      <Link href="/" className="logo" aria-label="ProxiMolar, inicio"><span className="logo-mark"><Icono nombre="store" size={23} /></span>ProxiMolar<span className="logo-dot">.</span></Link>
       <nav aria-label="Navegación principal"><Link href="/comercios">Explorar negocios</Link><Link href="/#categorias" className="nav-secondary">Categorías</Link></nav>
-      <Link href="/el-molar" className="location-link" aria-label="Guía de El Molar, Madrid"><Icono nombre="pin" size={17}/><span>El Molar, Madrid</span></Link>
+      <Link href="/el-molar" className="location-link" aria-label="Guía de El Molar, Madrid"><Icono nombre="pin" size={17} /><span>El Molar, Madrid</span></Link>
     </div></header>
     <main id="contenido">{children}</main>
     <footer className="site-footer"><div className="container footer-top">
-      <div><Link href="/" className="footer-brand">ProxiMolar.</Link><p>Tu guía local para descubrir comercios y profesionales de El Molar.</p><p className="footer-local">Hecho en El Molar · Cerca de ti</p></div>
       <nav aria-labelledby="footer-explora"><h2 id="footer-explora">Explora</h2><ul><li><Link href="/comercios">Negocios</Link></li><li><Link href="/el-molar">Guía de El Molar</Link></li><li><Link href="/#como-funciona">Cómo funciona</Link></li></ul></nav>
+      <nav aria-labelledby="footer-negocios"><h2 id="footer-negocios">Para negocios</h2><ul><li><Link href="/alta-comercio">Añade tu negocio</Link></li><li><Link href="/publicidad">Anúnciate</Link></li><li><Link href="/privacidad">Privacidad</Link></li></ul></nav>
     </div><div className="container footer-bottom"><span>© {new Date().getFullYear()} ProxiMolar</span></div></footer>
   </body></html>;
 }

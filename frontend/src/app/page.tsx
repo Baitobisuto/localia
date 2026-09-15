@@ -49,7 +49,7 @@ export default async function Inicio() {
     <section className="container section home-business" aria-labelledby="negocios-titulo">
       <div className="home-business-panel">
         <span className="home-callout-icon"><Icono nombre="store" size={32}/></span>
-        <div><span className="eyebrow">UN SITIO PARA LO LOCAL</span><h2 id="negocios-titulo">¿Tienes un negocio o trabajas por tu cuenta?</h2><p>ProxiMolar quiere reunir los comercios y profesionales de El Molar en un mismo sitio.</p><p className="home-coming-soon">Próximamente: solicita aparecer en ProxiMolar</p></div>
+        <div><span className="eyebrow">UN SITIO PARA LO LOCAL</span><h2 id="negocios-titulo">¿Tienes un negocio o trabajas por tu cuenta?</h2><p>Solicita aparecer en ProxiMolar o cuéntanos cómo te gustaría promocionar tu negocio.</p><div className="negocios-acciones"><Link className="button" href="/alta-comercio">Añade tu negocio</Link><Link className="button button-outline" href="/publicidad">Anúnciate</Link></div></div>
       </div>
     </section>
     <section className="container section"><div className="local-banner" id="como-funciona"><div className="banner-drawing"><Icono nombre="store" size={72}/><span>De aquí.<br/>Para ti.</span></div><div><span className="eyebrow">MUCHO MÁS QUE UN LUGAR EN EL MAPA</span><h2>Elegir cerca es<br/>dar vida a lo nuestro.</h2><p>Detrás de cada escaparate hay personas, ideas y mucho esfuerzo. ProxiMolar te ayuda a encontrarlas y a contactar directamente con ellas.</p><Link className="button" href="/comercios">Descubre tu próximo favorito <Icono nombre="arrow" size={18}/></Link></div></div></section>

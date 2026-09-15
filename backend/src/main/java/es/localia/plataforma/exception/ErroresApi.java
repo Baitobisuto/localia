@@ -11,6 +11,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @RestControllerAdvice
 public class ErroresApi {
@@ -39,18 +41,25 @@ public class ErroresApi {
         return ResponseEntity.status(404).body(new ErrorDto("RECURSO_NO_ENCONTRADO", "No se ha encontrado el recurso solicitado"));
     }
 
-    // Explica que el catálogo público solo admite operaciones de lectura.
+    // Rechaza JSON inválido y datos de formulario sin reflejar datos personales.
+    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorDto> manejarFormulario(Exception ex) {
+        return ResponseEntity.badRequest().body(new ErrorDto("SOLICITUD_INVALIDA",
+                "Revisa los campos obligatorios, el email, las longitudes y el consentimiento. Usa texto sin HTML y enlaces https://."));
+    }
+
+    // Informa de los métodos admitidos por cada ruta, conservando el catálogo de lectura.
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorDto> manejarMetodo(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
         registrarEsperado(request, ex);
-        return ResponseEntity.status(405).header("Allow", "GET, HEAD, OPTIONS")
-                .body(new ErrorDto("METODO_NO_PERMITIDO", "La API pública es de solo lectura"));
+        return ResponseEntity.status(405).header("Allow", String.join(", ", ex.getSupportedMethods() == null ? new String[0] : ex.getSupportedMethods()))
+                .body(new ErrorDto("METODO_NO_PERMITIDO", "Método no permitido para esta ruta"));
     }
 
     // Registra fallos inesperados con contexto y evita revelar detalles internos en HTTP.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDto> manejarError(Exception ex, HttpServletRequest request) {
-        log.error("operacion=servir_catalogo metodo={} endpoint={} excepcion={}", request.getMethod(), request.getRequestURI(), ex.getClass().getSimpleName(), ex);
+        log.error("operacion=servir_api metodo={} excepcion={}", request.getMethod(), ex.getClass().getSimpleName());
         return ResponseEntity.internalServerError().body(new ErrorDto("ERROR_INTERNO", "No se ha podido completar la solicitud"));
     }
 

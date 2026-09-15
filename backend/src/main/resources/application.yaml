@@ -1,4 +1,17 @@
 spring:
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+      mail.smtp.starttls.required: ${MAIL_STARTTLS:true}
+      mail.smtp.ssl.enable: ${MAIL_SSL:false}
+      mail.smtp.connectiontimeout: 3000
+      mail.smtp.timeout: 3000
+      mail.smtp.writetimeout: 3000
   application:
     name: localia
   datasource:
@@ -21,6 +34,10 @@ server:
     include-message: never
     include-stacktrace: never
 localia:
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:}
+    admin: ${ADMIN_NOTIFICATION_EMAIL:}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
 logging:
   level:
