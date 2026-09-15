@@ -36,8 +36,7 @@ public class ResendHttpClient implements ResendClient {
                     escaparJson(from),
                     escaparJson(to),
                     escaparJson(subject),
-                    escaparJson(text)
-            );
+                    escaparJson(text));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))
@@ -48,17 +47,27 @@ public class ResendHttpClient implements ResendClient {
 
             HttpResponse<String> response = httpClient.send(
                     request,
-                    HttpResponse.BodyHandlers.ofString()
-            );
+                    HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Resend respondiÃ³ con HTTP " + response.statusCode());
+                throw new IllegalStateException(
+                        "Resend respondió con HTTP "
+                                + response.statusCode()
+                                + ": "
+                                + response.body());
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("EnvÃ­o Resend interrumpido", ex);
+            throw new IllegalStateException(
+                    "Envío Resend interrumpido",
+                    ex);
+        } catch (IllegalStateException ex) {
+            throw ex;
         } catch (Exception ex) {
-            throw new IllegalStateException("No se pudo enviar mediante Resend", ex);
+            throw new IllegalStateException(
+                    "No se pudo conectar con Resend: "
+                            + ex.getClass().getSimpleName(),
+                    ex);
         }
     }
 

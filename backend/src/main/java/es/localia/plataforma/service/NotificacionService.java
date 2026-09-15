@@ -139,7 +139,6 @@ public class NotificacionService {
                     id);
 
         } catch (Exception ex) {
-
             log.warn(
                     "operacion=notificar_solicitud tipo={} id={} resultado=fallido excepcion={}",
                     tipo,
