@@ -7,9 +7,13 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class ResendHttpClient implements ResendClient {
+
+    private static final Logger log = LoggerFactory.getLogger(ResendHttpClient.class);
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final String apiKey;
@@ -58,15 +62,22 @@ public class ResendHttpClient implements ResendClient {
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
+
+            log.warn(
+                    "operacion=resend_http resultado=fallido etapa=conexion excepcion=InterruptedException");
+
             throw new IllegalStateException(
                     "Envío Resend interrumpido",
                     ex);
-        } catch (IllegalStateException ex) {
-            throw ex;
+
         } catch (Exception ex) {
+
+            log.warn(
+                    "operacion=resend_http resultado=fallido etapa=conexion excepcion={}",
+                    ex.getClass().getSimpleName());
+
             throw new IllegalStateException(
-                    "No se pudo conectar con Resend: "
-                            + ex.getClass().getSimpleName(),
+                    "No se pudo conectar con Resend",
                     ex);
         }
     }
