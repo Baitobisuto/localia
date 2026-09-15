@@ -4,33 +4,37 @@ import es.localia.plataforma.entity.SolicitudComercio;
 import es.localia.plataforma.entity.SolicitudPublicidad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NotificacionService {
+
     private static final Logger log = LoggerFactory.getLogger(NotificacionService.class);
-    private final ObjectProvider<JavaMailSender> correo;
+
+    private final ResendClient resendClient;
     private final boolean habilitado;
     private final String remitente;
     private final String destinatario;
 
-    public NotificacionService(ObjectProvider<JavaMailSender> correo,
+    public NotificacionService(
+            ResendClient resendClient,
             @Value("${localia.mail.enabled:false}") boolean habilitado,
-            @Value("${localia.mail.from:}") String remitente,
+            @Value("${localia.resend.from:}") String remitente,
             @Value("${localia.mail.admin:}") String destinatario) {
-        this.correo = correo;
+
+        this.resendClient = resendClient;
         this.habilitado = habilitado;
         this.remitente = remitente;
         this.destinatario = destinatario;
     }
 
-    // Compone texto plano con los datos necesarios para revisar el alta.
     public void notificarComercio(SolicitudComercio s) {
-        enviar("alta", s.getId(), "Alta de comercio", s.getNombreNegocio(), """
+
+        String asunto = "[Nueva solicitud ProxiMolar] Alta de comercio - "
+                + limpiarCabecera(s.getNombreNegocio());
+
+        String contenido = """
                 ID: %s
                 Fecha UTC: %s
                 Estado: PENDIENTE
@@ -45,14 +49,34 @@ public class NotificacionService {
                 Web: %s
                 Red social: %s
                 Observaciones: %s
-                """.formatted(s.getId(), s.getCreatedAt(), s.getNombreNegocio(), s.getPersonaContacto(),
-                s.getEmail(), s.getTelefono(), opcional(s.getWhatsapp()), s.getCategoria(), s.getDireccion(),
-                s.getDescripcion(), opcional(s.getWeb()), opcional(s.getInstagram()), opcional(s.getObservaciones())));
+                """.formatted(
+                s.getId(),
+                s.getCreatedAt(),
+                s.getNombreNegocio(),
+                s.getPersonaContacto(),
+                s.getEmail(),
+                s.getTelefono(),
+                opcional(s.getWhatsapp()),
+                s.getCategoria(),
+                s.getDireccion(),
+                s.getDescripcion(),
+                opcional(s.getWeb()),
+                opcional(s.getInstagram()),
+                opcional(s.getObservaciones()));
+
+        enviar(
+                "alta",
+                s.getId(),
+                asunto,
+                contenido);
     }
 
-    // Compone una notificación de publicidad sin publicar ni contratar promociones.
     public void notificarPublicidad(SolicitudPublicidad s) {
-        enviar("publicidad", s.getId(), "Publicidad", s.getNombreNegocio(), """
+
+        String asunto = "[Nueva solicitud ProxiMolar] Publicidad - "
+                + limpiarCabecera(s.getNombreNegocio());
+
+        String contenido = """
                 ID: %s
                 Fecha UTC: %s
                 Estado: PENDIENTE
@@ -62,43 +86,77 @@ public class NotificacionService {
                 Teléfono: %s
                 Interés: %s
                 Mensaje: %s
-                """.formatted(s.getId(), s.getCreatedAt(), s.getNombreNegocio(), s.getPersonaContacto(),
-                s.getEmail(), s.getTelefono(), s.getTipoInteres(), s.getMensaje()));
+                """.formatted(
+                s.getId(),
+                s.getCreatedAt(),
+                s.getNombreNegocio(),
+                s.getPersonaContacto(),
+                s.getEmail(),
+                s.getTelefono(),
+                s.getTipoInteres(),
+                s.getMensaje());
+
+        enviar(
+                "publicidad",
+                s.getId(),
+                asunto,
+                contenido);
     }
 
-    // Aísla fallos SMTP: registra solo tipo e ID, nunca destinatarios, contenido ni
-    // excepciones del proveedor.
-    private void enviar(String tipo, Long id, String asunto, String negocio, String contenido) {
+    private void enviar(
+            String tipo,
+            Long id,
+            String asunto,
+            String contenido) {
+
         try {
+
             if (!habilitado) {
-                log.warn("operacion=notificar_solicitud tipo={} id={} resultado=deshabilitado", tipo, id);
+                log.warn(
+                        "operacion=notificar_solicitud tipo={} id={} resultado=deshabilitado",
+                        tipo,
+                        id);
                 return;
             }
-            JavaMailSender emisor = correo.getIfAvailable();
-            if (emisor == null || remitente.isBlank() || destinatario.isBlank()) {
-                log.warn("operacion=notificar_solicitud tipo={} id={} resultado=configuracion_incompleta", tipo, id);
+
+            if (remitente.isBlank() || destinatario.isBlank()) {
+                log.warn(
+                        "operacion=notificar_solicitud tipo={} id={} resultado=configuracion_incompleta",
+                        tipo,
+                        id);
                 return;
             }
-            SimpleMailMessage mensaje = new SimpleMailMessage();
-            mensaje.setFrom(remitente);
-            mensaje.setTo(destinatario);
-            mensaje.setSubject(
-                    "[Nueva solicitud ProxiMolar] " + asunto + " - " + negocio.replaceAll("[\\r\\n\\t]", " "));
-            mensaje.setText(contenido);
-            emisor.send(mensaje);
-            log.info("operacion=notificar_solicitud tipo={} id={} resultado=enviado", tipo, id);
+
+            resendClient.enviar(
+                    remitente,
+                    destinatario,
+                    asunto,
+                    contenido);
+
+            log.info(
+                    "operacion=notificar_solicitud tipo={} id={} resultado=enviado",
+                    tipo,
+                    id);
+
         } catch (Exception ex) {
+
             log.warn(
-                    "operacion=notificar_solicitud tipo={} id={} resultado=fallido excepcion={} mensaje={}",
+                    "operacion=notificar_solicitud tipo={} id={} resultado=fallido excepcion={}",
                     tipo,
                     id,
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
+                    ex.getClass().getSimpleName());
         }
     }
 
-    // Indica campos no aportados sin inventar datos de contacto.
     private String opcional(String valor) {
-        return valor == null ? "No indicado" : valor;
+        return valor == null || valor.isBlank()
+                ? "No indicado"
+                : valor;
+    }
+
+    private String limpiarCabecera(String valor) {
+        return valor == null
+                ? ""
+                : valor.replaceAll("[\\r\\n\\t]", " ");
     }
 }

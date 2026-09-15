@@ -1,23 +1,12 @@
 spring:
-  mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
-      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
-      mail.smtp.starttls.required: ${MAIL_STARTTLS:true}
-      mail.smtp.ssl.enable: ${MAIL_SSL:false}
-      mail.smtp.connectiontimeout: 3000
-      mail.smtp.timeout: 3000
-      mail.smtp.writetimeout: 3000
   application:
     name: localia
+
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/localia}
     username: ${DATABASE_USERNAME:localia}
     password: ${DATABASE_PASSWORD}
+
   jpa:
     open-in-view: false
     hibernate:
@@ -25,30 +14,40 @@ spring:
     properties:
       hibernate:
         default_batch_fetch_size: 30
+
   flyway:
     enabled: true
     locations: classpath:db/migration
+
 server:
   port: ${PORT:8080}
   error:
     include-message: never
     include-stacktrace: never
+
 localia:
   mail:
     enabled: ${MAIL_ENABLED:false}
-    from: ${MAIL_FROM:}
     admin: ${ADMIN_NOTIFICATION_EMAIL:}
+
+  resend:
+    api-key: ${RESEND_API_KEY:}
+    from: ${RESEND_FROM:}
+
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
+
 logging:
   level:
     root: INFO
     org.springframework.web: INFO
     org.hibernate.SQL: WARN
     es.localia.plataforma: INFO
+
 ---
 spring:
   config:
     activate:
       on-profile: local
+
   flyway:
     locations: classpath:db/migration,classpath:db/demo
