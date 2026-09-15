@@ -66,7 +66,8 @@ public class NotificacionService {
                 s.getEmail(), s.getTelefono(), s.getTipoInteres(), s.getMensaje()));
     }
 
-    // Aísla fallos SMTP: registra solo tipo e ID, nunca destinatarios, contenido ni excepciones del proveedor.
+    // Aísla fallos SMTP: registra solo tipo e ID, nunca destinatarios, contenido ni
+    // excepciones del proveedor.
     private void enviar(String tipo, Long id, String asunto, String negocio, String contenido) {
         try {
             if (!habilitado) {
@@ -81,15 +82,23 @@ public class NotificacionService {
             SimpleMailMessage mensaje = new SimpleMailMessage();
             mensaje.setFrom(remitente);
             mensaje.setTo(destinatario);
-            mensaje.setSubject("[Nueva solicitud ProxiMolar] " + asunto + " - " + negocio.replaceAll("[\\r\\n\\t]", " "));
+            mensaje.setSubject(
+                    "[Nueva solicitud ProxiMolar] " + asunto + " - " + negocio.replaceAll("[\\r\\n\\t]", " "));
             mensaje.setText(contenido);
             emisor.send(mensaje);
             log.info("operacion=notificar_solicitud tipo={} id={} resultado=enviado", tipo, id);
         } catch (Exception ex) {
-            log.warn("operacion=notificar_solicitud tipo={} id={} resultado=fallido", tipo, id);
+            log.warn(
+                    "operacion=notificar_solicitud tipo={} id={} resultado=fallido excepcion={} mensaje={}",
+                    tipo,
+                    id,
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage());
         }
     }
 
     // Indica campos no aportados sin inventar datos de contacto.
-    private String opcional(String valor) { return valor == null ? "No indicado" : valor; }
+    private String opcional(String valor) {
+        return valor == null ? "No indicado" : valor;
+    }
 }
