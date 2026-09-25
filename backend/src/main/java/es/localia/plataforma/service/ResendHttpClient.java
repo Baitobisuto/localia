@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,13 +16,14 @@ public class ResendHttpClient implements ResendClient {
 
     private static final Logger log = LoggerFactory.getLogger(ResendHttpClient.class);
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     private final String apiKey;
 
     public ResendHttpClient(@Value("${localia.resend.api-key:}") String apiKey) {
         this.apiKey = apiKey;
     }
 
+    // Limita la espera al proveedor y registra solo estado y tipo de fallo, nunca credenciales ni contenido.
     @Override
     public void enviar(String from, String to, String subject, String text) {
         if (apiKey == null || apiKey.isBlank()) {
@@ -44,6 +46,7 @@ public class ResendHttpClient implements ResendClient {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.resend.com/emails"))
+                    .timeout(Duration.ofSeconds(10))
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))

@@ -99,4 +99,38 @@ class CatalogoIntegrationTest {
         mvc.perform(options("/api/comercios").header("Origin", "https://no-autorizado.example")
                 .header("Access-Control-Request-Method", "GET")).andExpect(status().isForbidden());
     }
+
+    // Comprueba cabeceras y ausencia de herramientas administrativas incluso en errores públicos.
+    @Test
+    void cabecerasYHerramientasInternas() throws Exception {
+        for (String ruta : new String[]{"/api/comercios", "/actuator", "/actuator/health", "/swagger-ui/index.html", "/v3/api-docs"}) {
+            var resultado = mvc.perform(get(ruta))
+                    .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                    .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
+                    .andExpect(header().string("Content-Security-Policy", containsString("default-src 'none'")))
+                    .andExpect(header().doesNotExist("Set-Cookie"));
+            if (!ruta.startsWith("/api/")) resultado.andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.codigo").value("RECURSO_NO_ENCONTRADO"))
+                    .andExpect(jsonPath("$.trace").doesNotExist());
+        }
+        mvc.perform(get("/api/comercios").secure(true))
+                .andExpect(header().string("Strict-Transport-Security", "max-age=31536000"));
+        mvc.perform(get("/api/comercios").header("X-Forwarded-Proto", "https"))
+                .andExpect(header().doesNotExist("Strict-Transport-Security"));
+    }
+
+    // Verifica preflight de lectura sin credenciales y rechazo de escritura y cabeceras ajenas.
+    @Test
+    void preflightRestringido() throws Exception {
+        mvc.perform(options("/api/comercios").header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "GET").header("Access-Control-Request-Headers", "Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
+        mvc.perform(options("/api/solicitudes-comercio").header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "POST")).andExpect(status().isForbidden());
+        mvc.perform(options("/api/comercios").header("Origin", "http://localhost:3000")
+                .header("Access-Control-Request-Method", "GET").header("Access-Control-Request-Headers", "Authorization"))
+                .andExpect(status().isForbidden());
+    }
 }

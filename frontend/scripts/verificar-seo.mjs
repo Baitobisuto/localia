@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createServer } from "node:http";
+import { createServer, get } from "node:http";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { setTimeout as esperar } from "node:timers/promises";
@@ -106,6 +106,30 @@ try {
   }
   const sitemap = await leer("/sitemap.xml");
   assert.equal(sitemap.respuesta.status, 200);
+  // Comprueba defensas en documentos, recursos y errores sin confundir observación con bloqueo.
+  for (const ruta of ["/", "/alta-comercio", "/publicidad", "/icon.svg", "/no-existe"]) {
+    const { respuesta } = await leer(ruta);
+    const cabeceras = respuesta.headers;
+    assert.equal(cabeceras.get("x-content-type-options"), "nosniff", ruta);
+    assert.equal(cabeceras.get("x-frame-options"), "SAMEORIGIN", ruta);
+    assert.equal(cabeceras.get("referrer-policy"), "strict-origin-when-cross-origin", ruta);
+    assert.equal(cabeceras.get("permissions-policy"), "camera=(), microphone=(), geolocation=()", ruta);
+    assert.equal(cabeceras.get("strict-transport-security"), "max-age=31536000", ruta);
+    assert.ok(cabeceras.get("content-security-policy")?.includes("frame-ancestors 'self'"), ruta);
+    assert.ok(cabeceras.get("content-security-policy")?.includes("form-action 'self'"), ruta);
+    const observacion = cabeceras.get("content-security-policy-report-only");
+    assert.ok(observacion?.includes("script-src 'self'") && !observacion.includes("unsafe-"), ruta);
+    assert.equal(cabeceras.get("x-powered-by"), null, ruta);
+  }
+  // node:http permite probar el Host real sin que fetch lo sustituya por el de loopback.
+  const www = await new Promise((resolve, reject) => {
+    get(`${base}/comercios?buscar=prueba`, { headers: { Host: "www.proximolar.es" } }, respuesta => {
+      respuesta.resume();
+      resolve(respuesta);
+    }).on("error", reject);
+  });
+  assert.equal(www.statusCode, 308);
+  assert.equal(www.headers.location, "https://proximolar.es/comercios?buscar=prueba");
   const rutas = [...sitemap.html.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => new URL(m[1]).pathname);
   assert.deepEqual(rutas, ["/", "/el-molar", "/el-molar/comercios", "/el-molar/restauracion", "/el-molar/profesionales", ...comercios.slice(0, 5).map(c => `/el-molar/comercios/${c.slug}`)]);
   assert.ok(!sitemap.html.includes("<lastmod>"));
@@ -134,7 +158,11 @@ try {
   assert.ok(navegador.split("</head>")[0].includes('rel="canonical"'), "Metadata en head también para navegadores");
   const ficha = (await leer("/el-molar/comercios/prueba-1")).html;
   assert.ok(schemas(ficha).some(s => s["@type"] === "LocalBusiness"));
-  for (const ruta of ["/comercios", "/comercios?municipio=el-molar&categoria=restauracion", "/comercios?buscar=sin-resultados", "/comercios?categoria=uno&categoria=dos", "/el-molar/comercios/prueba-6", "/el-molar/comercios/prueba-7"]) {
+  // El directorio base se indexa desde d95058d; solo sus filtros conservan noindex.
+  const directorio = (await leer("/comercios")).html;
+  assert.ok(directorio.includes('name="robots" content="index, follow"'));
+  assert.ok(directorio.includes(`rel="canonical" href="${sitio}/comercios"`));
+  for (const ruta of ["/comercios?municipio=el-molar&categoria=restauracion", "/comercios?buscar=sin-resultados", "/comercios?categoria=uno&categoria=dos", "/el-molar/comercios/prueba-6", "/el-molar/comercios/prueba-7"]) {
     const { html } = await leer(ruta);
     assert.ok(html.includes('name="robots" content="noindex, follow"'), ruta);
     assert.ok(!schemas(html).some(s => s["@type"] === "LocalBusiness"), ruta);
